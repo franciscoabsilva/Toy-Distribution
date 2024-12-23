@@ -10,7 +10,7 @@ The input file should be a `.txt` file that contain the following:
 - The first line contains three integers `factoriesCount`, `countriesCount` and `childrenCount`, representing the number of factories, countries and childs.
 - The next `factoriesCount` lines each contain three integers `factoryID`, `countryID` and `factoryStock`, representing the identifier of the factory, the identifier of country where the factory is located and the stock of toys available in the factory.
 - The next `countriesCount` lines each contain three integers `countryID`, `maxExported` and `minToys`, representing the identifier of the country, the maximum number of toys that can be exported from the country and  the minimum number of toys required to be delivered within the country.
-- The next `childrenCount` lines each contain at least three integers `childrenID`, `countryID` representing the identifier of the child and the identifier of the country where the child lives. The rest of the integers `factoryID` in that line represent the identifiers of factories that produce the toys the child wants.
+- The next `childrenCount` lines each contain at least three integers `childrenID`, `countryID` representing the identifier of the child and the identifier of the country where the child lives. The rest of the integers `factoriesRequested` in that line represent the identifiers of factories that produce the toys the child wants.
   
 The output will be printed to stdout and will contain the follow:
 
@@ -44,7 +44,7 @@ To run the program you'll need the following requirements:
 python -m pip install pulp
 ```
 ```bash
-# GLPK LP Solver
+# GLPK LP Solver (Ubuntu)
 sudo apt-get install glpk-utils
 ```
 
