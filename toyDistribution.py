@@ -1,5 +1,28 @@
 import pulp
 
+def readInput():
+    factoriesCount, countriesCount, childrenCount = map(int, input().split())
+
+    factories = {}
+    for _ in range(factoriesCount):
+        factoryID, countryID, factoryStock = map(int, input().split())
+        factories[factoryID] = {"countryID": countryID, "factoryStock": factoryStock}
+
+    countries = {}
+    for _ in range(countriesCount):
+        countryID, maxExported, minToys = map(int, input().split())
+        countries[countryID] = {"maxExported": maxExported, "minToys": minToys}
+
+    children = {}
+    for _ in range(childrenCount):
+        childrenInfo = list(map(int, input().split()))
+        childrenID = childrenInfo[0]
+        countryID = childrenInfo[1]
+        factoriesRequested = childrenInfo[2:]
+        children[childrenID] = {"countryID": countryID, "factoriesRequested": factoriesRequested}
+    
+    return factories, countries, children
+
 def solve(factories, countries, children):
     prob = pulp.LpProblem("ToyDistribution", pulp.LpMaximize)
 
@@ -76,26 +99,7 @@ def solve(factories, countries, children):
 
 
 def main():
-    factoriesCount, countriesCount, childrenCount = map(int, input().split())
-
-    factories = {}
-    for _ in range(factoriesCount):
-        factoryID, countryID, factoryStock = map(int, input().split())
-        factories[factoryID] = {"countryID": countryID, "factoryStock": factoryStock}
-
-    countries = {}
-    for _ in range(countriesCount):
-        countryID, maxExported, minToys = map(int, input().split())
-        countries[countryID] = {"maxExported": maxExported, "minToys": minToys}
-
-    children = {}
-    for _ in range(childrenCount):
-        childrenInfo = list(map(int, input().split()))
-        childrenID = childrenInfo[0]
-        countryID = childrenInfo[1]
-        factoriesRequested = childrenInfo[2:]
-        children[childrenID] = {"countryID": countryID, "factoriesRequested": factoriesRequested}
-
+    factories, countries, children = readInput()
     print(solve(factories, countries, children))
 
 
