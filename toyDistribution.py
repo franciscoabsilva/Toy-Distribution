@@ -12,20 +12,28 @@ def readInput():
     for _ in range(countriesCount):
         countryID, maxExported, minToys = map(int, input().split())
         countries[countryID] = {"maxExported": maxExported, "minToys": minToys}
-
+    
     children = {}
     for _ in range(childrenCount):
         childrenInfo = list(map(int, input().split()))
-        childrenID = childrenInfo[0]
-        countryID = childrenInfo[1]
-        factoriesRequested = childrenInfo[2:]
-        children[childrenID] = {"countryID": countryID, "factoriesRequested": factoriesRequested}
+        children[childrenInfo[0]] = {"countryID": childrenInfo[1], "factoriesRequested": childrenInfo[2:]}
     
     return factories, countries, children
 
 def solve(factories, countries, children):
     prob = pulp.LpProblem("ToyDistribution", pulp.LpMaximize)
+    """
+    # x[factory, child] = 1 if the factory provides a toy to the child, 0 otherwise
+    x = {}
+    for childID, childData in children.items():
+        for factoryID in childData["factoriesRequested"]:
+            if factoryID in factories:
+                x[factoryID, childID] = pulp.LpVariable(f"x_{factoryID}_{childID}", cat="Binary")
 
+    # y[child] = 1 if the child receives a toy, 0 otherwise
+    y = {childID: pulp.LpVariable(f"y_{childID}", cat="Binary") for childID in children}
+    """
+    
     # x[factory, child] = 1 if the factory provides a toy to the child, 0 otherwise
     x = pulp.LpVariable.dicts(
         "x", 
@@ -42,10 +50,64 @@ def solve(factories, countries, children):
         for child in children), 
         cat="Binary"
     )
+    """
 
     # Objective function (maximize the number of children that receive a requested toy)
     prob += pulp.lpSum(y[child] for child in children), "MaximizeRequests"
+    # Restrição 1: Limite de stock por fábrica
+    for factoryID, factoryData in factories.items():
+        prob += (
+            pulp.lpSum(
+                x[factoryID, childID]
+                for childID in children
+                if (factoryID, childID) in x
+            ) <= factoryData["factoryStock"],
+            f"FactoryStock_{factoryID}",
+        )
 
+    # Restrição 2: Limite de exportação por país
+    for countryID, countryData in countries.items():
+        prob += (
+            pulp.lpSum(
+                x[factoryID, childID]
+                for childID, childData in children.items()
+                for factoryID in childData["factoriesRequested"]
+                if (factoryID, childID) in x and factories[factoryID]["countryID"] == countryID
+            ) <= countryData["maxExported"],
+            f"MaxExport_{countryID}",
+        )
+
+    # Restrição 3: Mínimo de brinquedos por país
+    for countryID, countryData in countries.items():
+        prob += (
+            pulp.lpSum(
+                x[factoryID, childID]
+                for childID, childData in children.items()
+                for factoryID in childData["factoriesRequested"]
+                if (factoryID, childID) in x and factories[factoryID]["countryID"] == countryID
+            ) >= countryData["minToys"],
+            f"MinToys_{countryID}",
+        )
+
+    # Restrição 4: Cada criança pode receber no máximo 1 brinquedo
+    for childID, childData in children.items():
+        prob += (
+            pulp.lpSum(
+                x[factoryID, childID]
+                for factoryID in childData["factoriesRequested"]
+                if (factoryID, childID) in x
+            ) == y[childID],
+            f"OneToy_{childID}",
+        )
+
+    # Resolver problema
+    prob.solve(pulp.GLPK_CMD(msg=False))
+
+    if pulp.LpStatus[prob.status] == "Optimal":
+        return int(pulp.value(prob.objective))
+    else:
+        return -1
+    """
     # Restrictions:
     # 1. Each factory has a stock limit
     for factory in factories:
@@ -89,7 +151,7 @@ def solve(factories, countries, children):
             "childToy_{}".format(child)
         )
 
-    prob.solve(pulp.GLPK(msg=False))
+    prob.solve(pulp.GLPK_CMD(msg=False))
 
     if pulp.LpStatus[prob.status] == "Optimal":
         return int(pulp.value(prob.objective))
