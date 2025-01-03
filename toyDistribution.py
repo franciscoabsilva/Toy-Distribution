@@ -28,7 +28,8 @@ def solve(factories, countries, children):
         "x", 
         ((factory, child) 
         for child in children 
-        for factory in children[child]["factoriesRequested"]),
+        for factory in children[child]["factoriesRequested"]
+        if factories[factory]["factoryStock"] > 0),
         cat="Binary"
     )
 
