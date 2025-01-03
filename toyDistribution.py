@@ -22,24 +22,13 @@ def readInput():
 
 def solve(factories, countries, children):
     prob = pulp.LpProblem("ToyDistribution", pulp.LpMaximize)
-    """
-    # x[factory, child] = 1 if the factory provides a toy to the child, 0 otherwise
-    x = {}
-    for childID, childData in children.items():
-        for factoryID in childData["factoriesRequested"]:
-            if factoryID in factories:
-                x[factoryID, childID] = pulp.LpVariable(f"x_{factoryID}_{childID}", cat="Binary")
-
-    # y[child] = 1 if the child receives a toy, 0 otherwise
-    y = {childID: pulp.LpVariable(f"y_{childID}", cat="Binary") for childID in children}
-    """
     
     # x[factory, child] = 1 if the factory provides a toy to the child, 0 otherwise
     x = pulp.LpVariable.dicts(
         "x", 
         ((factory, child) 
-        for factory in factories 
-        for child in children), 
+        for child in children 
+        for factory in children[child]["factoriesRequested"]),
         cat="Binary"
     )
 
@@ -54,7 +43,7 @@ def solve(factories, countries, children):
     # Objective function (maximize the number of children that receive a requested toy)
     prob += pulp.lpSum(y[child] for child in children), "MaximizeRequests"
     
-    """
+
     # Restrição 1: Limite de stock por fábrica
     for factoryID, factoryData in factories.items():
         prob += (
@@ -110,7 +99,6 @@ def solve(factories, countries, children):
         return -1
     """
     # Restrictions:
-    # 0. the num of children in a contry is more or equal to the minToys 
 
     # 1. Each factory has a stock limit
     for factory in factories:
@@ -153,7 +141,7 @@ def solve(factories, countries, children):
             ) == y[child], 
             "childToy_{}".format(child)
         )
-
+"""
     prob.solve(pulp.GLPK_CMD(msg=False))
 
     if pulp.LpStatus[prob.status] == "Optimal":
