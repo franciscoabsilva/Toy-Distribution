@@ -17,7 +17,7 @@ def readInput():
     for _ in range(childrenCount):
         childrenInfo = list(map(int, input().split()))
         children[childrenInfo[0]] = {"countryID": childrenInfo[1], "factoriesRequested": childrenInfo[2:]}
-    
+        #countries[childrenInfo[1]]["numChildren"] += 1
     return factories, countries, children
 
 def solve(factories, countries, children):
@@ -50,10 +50,11 @@ def solve(factories, countries, children):
         for child in children), 
         cat="Binary"
     )
-    """
 
     # Objective function (maximize the number of children that receive a requested toy)
     prob += pulp.lpSum(y[child] for child in children), "MaximizeRequests"
+    
+    """
     # Restrição 1: Limite de stock por fábrica
     for factoryID, factoryData in factories.items():
         prob += (
@@ -109,6 +110,8 @@ def solve(factories, countries, children):
         return -1
     """
     # Restrictions:
+    # 0. the num of children in a contry is more or equal to the minToys 
+
     # 1. Each factory has a stock limit
     for factory in factories:
         prob += (
@@ -162,6 +165,9 @@ def solve(factories, countries, children):
 
 def main():
     factories, countries, children = readInput()
+    """for country in countries:
+        if(countries[country]["numChildren"] < countries[country]["minToys"]):
+            print(-1)"""
     print(solve(factories, countries, children))
 
 
