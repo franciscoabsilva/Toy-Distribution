@@ -44,7 +44,9 @@ def solve(factories, countries, children):
     # Objective function (maximize the number of children that receive a requested toy)
     prob += pulp.lpSum(y[child] for child in children), "MaximizeRequests"
     
-    # Restrição 1: Limite de stock por fábrica
+    # Restrictions:
+
+    # 1. Each factory has a stock limit
     for factoryID, factoryData in factories.items():
         prob += (
             pulp.lpSum(
@@ -55,7 +57,7 @@ def solve(factories, countries, children):
             f"FactoryStock_{factoryID}",
         )
 
-    # Restrição 2: Limite de exportação por país
+    # 2. Each country has a limit of toys that can be exported
     for countryID, countryData in countries.items():
         prob += (
             pulp.lpSum(
@@ -68,7 +70,7 @@ def solve(factories, countries, children):
             f"MaxExport_{countryID}",
         )
 
-    # Restrição 3: Mínimo de brinquedos por país
+    # 3. Each country has a minimum number of toys that must be delivered
     for countryID, countryData in countries.items():
         prob += (
             pulp.lpSum(
@@ -80,7 +82,7 @@ def solve(factories, countries, children):
             f"MinToys_{countryID}",
         )
 
-    # Restrição 4: Cada criança pode receber no máximo 1 brinquedo
+    # 4. Each child receives at most one toy
     for childID, childData in children.items():
         prob += (
             pulp.lpSum(
@@ -91,64 +93,13 @@ def solve(factories, countries, children):
             f"OneToy_{childID}",
         )
 
-    # Resolver problema
+    # Solve the problem
     prob.solve(pulp.GLPK_CMD(msg=False))
 
     if pulp.LpStatus[prob.status] == "Optimal":
         return int(pulp.value(prob.objective))
     else:
         return -1
-    """
-    # Restrictions:
-
-    # 1. Each factory has a stock limit
-    for factory in factories:
-        prob += (
-            pulp.lpSum(x[factory, child] for child in children) 
-            <= factories[factory]["factoryStock"], 
-            "factoryStock_{}".format(factory)
-        )
-
-    # 2. Each country has a limit of toys that can be exported
-    for countryID, countryInfo in countries.items():
-        prob += (
-            pulp.lpSum(
-                x[factory, child]
-                for factory in factories
-                for child in children
-                if factories[factory]["countryID"] == countryID
-            ) <= countryInfo["maxExported"], 
-            "maxExported_{}".format(countryID)
-        )
-
-    # 3. Each country has a minimum number of toys that must be delivered
-    for countryID, countryInfo in countries.items():
-        prob += (
-            pulp.lpSum(
-                x[factory, child]
-                for factory in factories
-                for child in children
-                if factories[factory]["countryID"] == countryID
-            ) >= countryInfo["minToys"], 
-            "minToys_{}".format(countryID)
-        )
-
-    # 4. Each child receives at most one toy
-    for child in children:
-        prob += (
-            pulp.lpSum(
-                x[factory, child] 
-                for factory in children[child]["factoriesRequested"]
-            ) == y[child], 
-            "childToy_{}".format(child)
-        )
-    prob.solve(pulp.GLPK_CMD(msg=False))
-
-    if pulp.LpStatus[prob.status] == "Optimal":
-        return int(pulp.value(prob.objective))
-    else:
-        return -1
-"""
 
 def main():
     factories, countries, children = readInput()
