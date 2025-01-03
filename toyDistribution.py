@@ -11,13 +11,13 @@ def readInput():
     countries = {}
     for _ in range(countriesCount):
         countryID, maxExported, minToys = map(int, input().split())
-        countries[countryID] = {"maxExported": maxExported, "minToys": minToys}
+        countries[countryID] = {"maxExported": maxExported, "minToys": minToys , "numChildren": 0}
     
     children = {}
     for _ in range(childrenCount):
         childrenInfo = list(map(int, input().split()))
         children[childrenInfo[0]] = {"countryID": childrenInfo[1], "factoriesRequested": childrenInfo[2:]}
-        #countries[childrenInfo[1]]["numChildren"] += 1
+        countries[childrenInfo[1]]["numChildren"] += 1
     return factories, countries, children
 
 def solve(factories, countries, children):
@@ -43,7 +43,6 @@ def solve(factories, countries, children):
     # Objective function (maximize the number of children that receive a requested toy)
     prob += pulp.lpSum(y[child] for child in children), "MaximizeRequests"
     
-
     # Restrição 1: Limite de stock por fábrica
     for factoryID, factoryData in factories.items():
         prob += (
@@ -63,6 +62,7 @@ def solve(factories, countries, children):
                 for childID, childData in children.items()
                 for factoryID in childData["factoriesRequested"]
                 if (factoryID, childID) in x and factories[factoryID]["countryID"] == countryID
+                and childData["countryID"] != countryID
             ) <= countryData["maxExported"],
             f"MaxExport_{countryID}",
         )
@@ -141,21 +141,21 @@ def solve(factories, countries, children):
             ) == y[child], 
             "childToy_{}".format(child)
         )
-"""
     prob.solve(pulp.GLPK_CMD(msg=False))
 
     if pulp.LpStatus[prob.status] == "Optimal":
         return int(pulp.value(prob.objective))
     else:
         return -1
-
-
+"""
 
 def main():
     factories, countries, children = readInput()
-    """for country in countries:
+    for country in countries:
         if(countries[country]["numChildren"] < countries[country]["minToys"]):
-            print(-1)"""
+            print(-1)
+            return
+
     print(solve(factories, countries, children))
 
 
