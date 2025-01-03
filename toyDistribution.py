@@ -74,7 +74,7 @@ def solve(factories, countries, children):
                 x[factoryID, childID]
                 for childID, childData in children.items()
                 for factoryID in childData["factoriesRequested"]
-                if (factoryID, childID) in x and factories[factoryID]["countryID"] == countryID
+                if (factoryID, childID) in x and childData["countryID"] == countryID
             ) >= countryData["minToys"],
             f"MinToys_{countryID}",
         )
