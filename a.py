@@ -17,14 +17,14 @@ def readInput():
     children = {}
     for _ in range(childrenCount):
         childrenInfo = list(map(int, input().split()))
-        children[childrenInfo[0]] = {"countryID": childrenInfo[1], "factoriesRequested": childrenInfo[2:], "factories": []}
+        children[childrenInfo[0]] = {"countryID": childrenInfo[1], "factoriesRequested": childrenInfo[2:]}
         for factory in childrenInfo[2:]:
             x[factory, childrenInfo[0]] = pulp.LpVariable(f"x_{childrenInfo[0]}_{factory}", 0, 1, pulp.LpBinary)
             factories[factory]["kids"].append(x[factory, childrenInfo[0]])
-            if factories[factory]["countryID"] != childrenInfo[1]:
+            if factories[factory]["countryID"] == childrenInfo[1]:
+                countries[childrenInfo[1]]["importList"].append(x[factory, childrenInfo[0]])
+            else:
                 countries[factories[factory]["countryID"]]["exportList"].append(x[factory, childrenInfo[0]])
-            countries[childrenInfo[1]]["importList"].append(x[factory, childrenInfo[0]])
-            children[childrenInfo[0]]["factories"].append(x[factory, childrenInfo[0]])
         countries[childrenInfo[1]]["numChildren"] += 1
     return factories, countries, children, x
 
@@ -60,14 +60,16 @@ def solve(factories, countries, children, x):
             pulp.lpSum(
                 toy for toy in countryData["importList"]
             ) >= countryData["minToys"],
-            f"MinImport_{countryID}",
+            f"MinToys_{countryID}",
         )
 
     # 4. Each child receives at most one toy
     for childID, childData in children.items():
         prob += (
             pulp.lpSum(
-                toy for toy in childData["factories"]
+                x[factoryID, childID]
+                for factoryID in childData["factoriesRequested"]
+                if (factoryID, childID) in x
             ) <= 1,
             f"OneToy_{childID}",
         )
